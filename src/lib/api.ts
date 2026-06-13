@@ -8,18 +8,35 @@
 
 import { products, categories, banners, promoBanner } from "./mock-data";
 import type { Product, Category, Banner, Review } from "./types";
-import { apiGet, useApi } from "./http";
+import { apiGet, useApi, NonJsonResponseError } from "./http";
 
 // Revalidate catalog data every 60s when served from the API (ISR).
 const CATALOG_TTL = 60;
 
+// Run a live API call, but if the API returns HTML/non-JSON (misconfigured URL,
+// proxy/login page, server error page) fall back to mock data instead of letting
+// the parse error bubble up and fail the build. Genuine API errors still throw.
+async function withMockFallback<T>(fetcher: () => Promise<T>, fallback: () => T): Promise<T> {
+  try {
+    return await fetcher();
+  } catch (err) {
+    if (err instanceof NonJsonResponseError) return fallback();
+    throw err;
+  }
+}
+
 export async function getProducts(): Promise<Product[]> {
   if (!useApi) return products;
-  const res = await apiGet<{ data: Product[] }>("/products", {
-    params: { per_page: 48 },
-    revalidate: CATALOG_TTL,
-  });
-  return res.data;
+  return withMockFallback(
+    async () => {
+      const res = await apiGet<{ data: Product[] }>("/products", {
+        params: { per_page: 48 },
+        revalidate: CATALOG_TTL,
+      });
+      return res.data;
+    },
+    () => products,
+  );
 }
 
 export async function getProduct(slug: string): Promise<Product | undefined> {
@@ -27,7 +44,8 @@ export async function getProduct(slug: string): Promise<Product | undefined> {
   try {
     const res = await apiGet<{ data: Product }>(`/products/${slug}`, { revalidate: CATALOG_TTL });
     return res.data;
-  } catch {
+  } catch (err) {
+    if (err instanceof NonJsonResponseError) return products.find((p) => p.slug === slug);
     return undefined;
   }
 }
@@ -38,11 +56,19 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
       (p) => p.categorySlug === categorySlug || p.categorySlug.startsWith(`${categorySlug}-`),
     );
   }
-  const res = await apiGet<{ data: Product[] }>(`/categories/${categorySlug}/products`, {
-    params: { per_page: 48 },
-    revalidate: CATALOG_TTL,
-  });
-  return res.data;
+  return withMockFallback(
+    async () => {
+      const res = await apiGet<{ data: Product[] }>(`/categories/${categorySlug}/products`, {
+        params: { per_page: 48 },
+        revalidate: CATALOG_TTL,
+      });
+      return res.data;
+    },
+    () =>
+      products.filter(
+        (p) => p.categorySlug === categorySlug || p.categorySlug.startsWith(`${categorySlug}-`),
+      ),
+  );
 }
 
 export async function getNewArrivals(): Promise<Product[]> {
@@ -75,43 +101,64 @@ export async function getRelated(product: Product): Promise<Product[]> {
 export async function searchProducts(query: string): Promise<Product[]> {
   const q = query.trim();
   if (!q) return [];
-  if (!useApi) {
-    const lower = q.toLowerCase();
-    return products.filter(
+  const lower = q.toLowerCase();
+  const matchMock = () =>
+    products.filter(
       (p) =>
         p.name.toLowerCase().includes(lower) ||
         p.categoryName.toLowerCase().includes(lower) ||
         p.description.toLowerCase().includes(lower),
     );
-  }
-  const res = await apiGet<{ data: Product[] }>("/products", {
-    params: { search: q, per_page: 24 },
-  });
-  return res.data;
+  if (!useApi) return matchMock();
+  return withMockFallback(
+    async () => {
+      const res = await apiGet<{ data: Product[] }>("/products", {
+        params: { search: q, per_page: 24 },
+      });
+      return res.data;
+    },
+    matchMock,
+  );
 }
 
 export async function getCategories(): Promise<Category[]> {
   if (!useApi) return categories;
-  const res = await apiGet<{ data: Category[] }>("/categories", { revalidate: 300 });
-  return res.data;
+  return withMockFallback(
+    async () => {
+      const res = await apiGet<{ data: Category[] }>("/categories", { revalidate: 300 });
+      return res.data;
+    },
+    () => categories,
+  );
 }
 
 export async function getHeroBanners(): Promise<Banner[]> {
-  if (!useApi) return banners.filter((b) => b.position === "hero_main");
-  const res = await apiGet<{ data: Banner[] }>("/banners", {
-    params: { position: "hero_main" },
-    revalidate: 300,
-  });
-  return res.data.length ? res.data : banners.filter((b) => b.position === "hero_main");
+  const mockHero = () => banners.filter((b) => b.position === "hero_main");
+  if (!useApi) return mockHero();
+  return withMockFallback(
+    async () => {
+      const res = await apiGet<{ data: Banner[] }>("/banners", {
+        params: { position: "hero_main" },
+        revalidate: 300,
+      });
+      return res.data.length ? res.data : mockHero();
+    },
+    mockHero,
+  );
 }
 
 export async function getPromoBanner(): Promise<Banner> {
   if (!useApi) return promoBanner;
-  const res = await apiGet<{ data: Banner[] }>("/banners", {
-    params: { position: "section_banner" },
-    revalidate: 300,
-  });
-  return res.data[0] ?? promoBanner;
+  return withMockFallback(
+    async () => {
+      const res = await apiGet<{ data: Banner[] }>("/banners", {
+        params: { position: "section_banner" },
+        revalidate: 300,
+      });
+      return res.data[0] ?? promoBanner;
+    },
+    () => promoBanner,
+  );
 }
 
 export async function getReviews(product: Product): Promise<Review[]> {
@@ -119,7 +166,8 @@ export async function getReviews(product: Product): Promise<Review[]> {
   try {
     const res = await apiGet<{ data: Review[] }>(`/reviews/${product.id}`, { revalidate: CATALOG_TTL });
     return res.data;
-  } catch {
+  } catch (err) {
+    if (err instanceof NonJsonResponseError) return getMockReviews(product);
     return [];
   }
 }

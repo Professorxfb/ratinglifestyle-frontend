@@ -20,6 +20,21 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Thrown when the API responds with a non-JSON body — e.g. an HTML error page,
+ * a proxy/login redirect, or a misconfigured `NEXT_PUBLIC_API_URL` that points at
+ * a web server instead of the API. The data layer treats this as "API unavailable"
+ * and falls back to mock data rather than failing the build.
+ */
+export class NonJsonResponseError extends Error {
+  status: number;
+  constructor(status: number) {
+    super(`Expected JSON but the API returned a non-JSON response (status ${status})`);
+    this.name = "NonJsonResponseError";
+    this.status = status;
+  }
+}
+
 type Query = Record<string, string | number | boolean | undefined | null>;
 
 function buildUrl(path: string, params?: Query): string {
@@ -34,12 +49,21 @@ function buildUrl(path: string, params?: Query): string {
 
 async function parse<T>(res: Response): Promise<T> {
   const text = await res.text();
-  const json = text ? JSON.parse(text) : null;
+  let json: unknown = null;
+  if (text) {
+    try {
+      json = JSON.parse(text);
+    } catch {
+      // Body wasn't JSON (HTML error page, proxy redirect, SPA fallback, etc.).
+      throw new NonJsonResponseError(res.status);
+    }
+  }
   if (!res.ok) {
+    const body = (json ?? {}) as { message?: string; errors?: Record<string, string[]> };
     throw new ApiError(
-      json?.message ?? `Request failed (${res.status})`,
+      body.message ?? `Request failed (${res.status})`,
       res.status,
-      json?.errors,
+      body.errors,
     );
   }
   return json as T;

@@ -2,37 +2,141 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ───────────────────────────────────────────────────────────────
+   THEME SYSTEM — colors are RGB channels (space separated) so that
+   Tailwind's `rgb(var(--x) / <alpha-value>)` opacity modifiers work.
+   Switch themes by setting `data-theme` on <html>.
+   ─────────────────────────────────────────────────────────────── */
+:root,
+[data-theme="obsidian-gold"] {
+  --bg-primary: 5 5 5;
+  --bg-secondary: 10 10 10;
+  --card-bg: 13 13 13;
+  --border: 26 26 26;
+  --text-primary: 245 245 240;
+  --text-secondary: 232 224 208;
+  --text-muted: 138 138 138;
+  --accent: 201 168 76;
+  --accent-light: 245 230 163;
+  --accent-dark: 156 127 48;
+  --grain-opacity: 0.05;
+  color-scheme: dark;
+}
+
+[data-theme="ivory-pearl"] {
+  --bg-primary: 248 245 240;
+  --bg-secondary: 240 236 228;
+  --card-bg: 255 255 255;
+  --border: 224 217 204;
+  --text-primary: 26 26 26;
+  --text-secondary: 60 54 46;
+  --text-muted: 122 114 102;
+  --accent: 139 105 20;
+  --accent-light: 184 146 56;
+  --accent-dark: 107 80 12;
+  --grain-opacity: 0.03;
+  color-scheme: light;
+}
+
+[data-theme="midnight-rose"] {
+  --bg-primary: 8 5 16;
+  --bg-secondary: 14 10 24;
+  --card-bg: 19 13 30;
+  --border: 38 28 52;
+  --text-primary: 246 240 245;
+  --text-secondary: 222 202 216;
+  --text-muted: 150 138 154;
+  --accent: 201 116 138;
+  --accent-light: 232 174 190;
+  --accent-dark: 150 80 102;
+  --grain-opacity: 0.05;
+  color-scheme: dark;
+}
+
+[data-theme="royal-emerald"] {
+  --bg-primary: 5 10 8;
+  --bg-secondary: 9 16 13;
+  --card-bg: 12 21 16;
+  --border: 26 40 32;
+  --text-primary: 240 245 242;
+  --text-secondary: 200 222 210;
+  --text-muted: 134 150 142;
+  --accent: 76 175 130;
+  --accent-light: 134 212 172;
+  --accent-dark: 46 120 88;
+  --grain-opacity: 0.05;
+  color-scheme: dark;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  color: #f5f5f0;
-  background: #0a0a0a;
+  color: rgb(var(--text-primary));
+  background: rgb(var(--bg-primary));
   font-family: var(--font-dmsans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Custom gold scrollbar on dark */
+/* Smooth theme transition on color-bearing surfaces (scoped — not `all`,
+   which would jank transforms/animations). */
+body,
+header,
+footer,
+aside,
+section,
+input,
+textarea,
+button,
+a,
+span,
+div,
+p,
+h1,
+h2,
+h3,
+h4 {
+  transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+}
+/* Never let the theme transition fight motion-driven interactions. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Custom gold scrollbar (4px, rounded, themed) */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: rgb(var(--bg-primary));
 }
 ::-webkit-scrollbar-thumb {
-  background: #c9a84c;
-  border-radius: 3px;
+  background: linear-gradient(180deg, rgb(var(--accent-light)), rgb(var(--accent-dark)));
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #e0c878;
+  background: rgb(var(--accent-light));
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--accent)) rgb(var(--bg-primary));
 }
 
 ::selection {
-  background: rgba(201, 168, 76, 0.3);
-  color: #f5f5f0;
+  background: rgb(var(--accent) / 0.3);
+  color: rgb(var(--text-primary));
 }
 
 @layer components {
@@ -46,7 +150,29 @@ body {
     @apply text-xs uppercase tracking-luxe text-gold;
   }
   .heading-display {
-    @apply font-display text-3xl sm:text-4xl md:text-5xl leading-tight text-ink;
+    @apply font-display font-light tracking-cinematic text-4xl leading-[1.05] text-ink sm:text-5xl md:text-6xl;
+  }
+  .heading-hero {
+    @apply font-display font-light leading-[0.95] tracking-cinematic text-ink
+      text-6xl sm:text-7xl md:text-8xl lg:text-[6.5rem];
+  }
+
+  /* Gold gradient text */
+  .text-gold-grad {
+    background-image: linear-gradient(
+      135deg,
+      rgb(var(--accent)) 0%,
+      rgb(var(--accent-light)) 45%,
+      rgb(var(--accent)) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .text-gold-grad-anim {
+    @apply text-gold-grad animate-text-shimmer;
   }
 
   /* Gold underline accent under a heading */
@@ -56,13 +182,14 @@ body {
 
   /* Buttons */
   .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 rounded-sm bg-gold-gradient px-7 py-3
-      text-sm font-semibold uppercase tracking-wide text-obsidian transition-all duration-300
-      hover:shadow-gold hover:brightness-110 active:scale-[0.98] disabled:opacity-50;
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-sm
+      bg-gold-gradient px-8 py-3.5 text-sm font-semibold uppercase tracking-cinematic text-obsidian
+      transition-all duration-300 hover:shadow-gold hover:brightness-110 active:scale-[0.98]
+      disabled:opacity-50;
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-sm border border-gold px-7 py-3
-      text-sm font-semibold uppercase tracking-wide text-gold transition-all duration-300
+    @apply inline-flex items-center justify-center gap-2 rounded-sm border border-gold px-8 py-3.5
+      text-sm font-semibold uppercase tracking-cinematic text-gold transition-all duration-300
       hover:bg-gold hover:text-obsidian active:scale-[0.98];
   }
   .btn-ghost {
@@ -70,14 +197,23 @@ body {
       text-sm text-ink/80 transition-colors duration-300 hover:border-gold hover:text-gold;
   }
 
-  /* Glass surface (header, modals) */
+  /* Glass surfaces */
   .glass {
-    @apply bg-obsidian/70 backdrop-blur-xl;
+    background: rgb(var(--bg-primary) / 0.6);
+    @apply backdrop-blur-2xl;
+  }
+  .glass-card {
+    background: rgb(var(--bg-primary) / 0.4);
+    @apply backdrop-blur-xl border border-gold/20;
+  }
+  .glass-panel {
+    background: rgb(var(--bg-secondary) / 0.85);
+    @apply backdrop-blur-2xl border border-gold/25;
   }
 
   /* Animated gold underline for nav links */
   .nav-link {
-    @apply relative text-sm uppercase tracking-wide text-ink/80 transition-colors hover:text-ink;
+    @apply relative text-sm uppercase tracking-cinematic text-ink/80 transition-colors hover:text-ink;
   }
   .nav-link::after {
     content: "";
@@ -89,9 +225,22 @@ body {
 
   /* Skeleton shimmer */
   .skeleton {
-    background: linear-gradient(90deg, #161616 0%, #1e1e1e 50%, #161616 100%);
+    background: linear-gradient(
+      90deg,
+      rgb(var(--card-bg)) 0%,
+      rgb(var(--border)) 50%,
+      rgb(var(--card-bg)) 100%
+    );
     background-size: 200% 100%;
     @apply animate-shimmer rounded-sm;
+  }
+
+  /* Thin gold border with gradient (used as section accents) */
+  .gold-border-grad {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(rgb(var(--card-bg)), rgb(var(--card-bg))) padding-box,
+      linear-gradient(135deg, rgb(var(--accent) / 0.6), transparent 40%, rgb(var(--accent) / 0.4)) border-box;
   }
 }
 
@@ -105,5 +254,44 @@ body {
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  /* Snap row for mobile horizontal product scroll */
+  .snap-row {
+    scroll-snap-type: x mandatory;
+  }
+  .snap-row > * {
+    scroll-snap-align: start;
+  }
+
+  /* Subtle CSS grain / noise overlay (apply to hero & dark sections) */
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--grain-opacity, 0.05);
+    z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+  }
+
+  /* Gold ripple (button press) */
+  .ripple {
+    position: relative;
+    overflow: hidden;
+  }
+  .ripple > .ripple-dot {
+    position: absolute;
+    border-radius: 9999px;
+    transform: scale(0);
+    background: rgb(var(--accent-light) / 0.55);
+    animation: ripple-expand 0.6s ease-out;
+    pointer-events: none;
+  }
+  @keyframes ripple-expand {
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
   }
 }

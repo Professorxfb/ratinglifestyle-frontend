@@ -26,7 +26,7 @@ export default function Header() {
     setHydrated(true);
     const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll();
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -35,26 +35,31 @@ export default function Header() {
       <PromoStrip />
       <div
         className={clsx(
-          "glass border-b transition-all duration-300",
-          scrolled ? "border-line py-3 shadow-luxe" : "border-transparent py-5",
+          "relative transition-all duration-500",
+          scrolled
+            ? "glass py-3 shadow-luxe"
+            : "bg-transparent py-5",
         )}
       >
         <div className="container-luxe flex items-center justify-between gap-4">
           {/* Mobile hamburger */}
           <button
-            className="text-ink lg:hidden"
+            className="text-ink transition-colors hover:text-gold lg:hidden"
             aria-label="Open menu"
             onClick={() => setMobileOpen(true)}
           >
             <BurgerIcon />
           </button>
 
-          {/* Logo */}
+          {/* Logo with gold shimmer on hover */}
           <Link
             href="/"
-            className="font-logo text-xl tracking-luxe text-ink sm:text-2xl"
+            className="group font-logo text-xl tracking-luxe text-ink sm:text-2xl"
           >
-            RUPKOTHA <span className="text-gold">TRENDZ</span>
+            RUPKOTHA{" "}
+            <span className="text-gold-grad transition-all duration-500 group-hover:[background-position:200%_50%]">
+              TRENDZ
+            </span>
           </Link>
 
           {/* Desktop nav with mega menu */}
@@ -69,7 +74,7 @@ export default function Header() {
                 </Link>
                 {/* Mega menu */}
                 <div className="invisible absolute left-1/2 top-full w-56 -translate-x-1/2 pt-5 opacity-0 transition-all duration-300 group-hover:visible group-hover:opacity-100">
-                  <div className="glass rounded-sm border border-line p-5 shadow-luxe">
+                  <div className="glass-panel rounded-sm p-5 shadow-luxe">
                     <p className="eyebrow mb-3">{cat.name}</p>
                     <ul className="space-y-2.5">
                       {cat.subcategories?.map((sub) => (
@@ -93,41 +98,40 @@ export default function Header() {
           </nav>
 
           {/* Action icons */}
-          <div className="flex items-center gap-4 sm:gap-5">
-            <button
-              aria-label="Search"
-              className="text-ink transition-colors hover:text-gold"
-              onClick={() => setSearchOpen(true)}
-            >
+          <div className="flex items-center gap-3 sm:gap-4">
+            <IconButton label="Search" onClick={() => setSearchOpen(true)}>
               <SearchIcon />
-            </button>
-            <Link
-              href="/wishlist"
-              aria-label="Wishlist"
-              className="relative text-ink transition-colors hover:text-gold"
-            >
+            </IconButton>
+            <IconLink href="/wishlist" label="Wishlist">
               <HeartIcon />
               {hydrated && wishCount > 0 && <Badge>{wishCount}</Badge>}
-            </Link>
-            <button
-              aria-label="Cart"
-              className="relative text-ink transition-colors hover:text-gold"
-              onClick={openCart}
-            >
+            </IconLink>
+            <IconButton label="Cart" onClick={openCart}>
               <BagIcon />
               {hydrated && cartCount > 0 && <Badge>{cartCount}</Badge>}
-            </button>
+            </IconButton>
             <Link
               href={hydrated && isAuthed ? "/account" : "/login"}
               aria-label="Account"
-              className="relative hidden text-ink transition-colors hover:text-gold sm:block"
+              className="relative hidden h-10 w-10 items-center justify-center rounded-full text-ink transition-all hover:text-gold hover:shadow-gold sm:flex"
             >
               <UserIcon />
               {hydrated && isAuthed && (
-                <span className="absolute -right-1 -top-0.5 h-2 w-2 rounded-full bg-success" />
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-success" />
               )}
             </Link>
           </div>
+        </div>
+
+        {/* Shimmering gold bottom border */}
+        <div
+          className={clsx(
+            "pointer-events-none absolute inset-x-0 bottom-0 h-px overflow-hidden transition-opacity duration-500",
+            scrolled ? "opacity-100" : "opacity-0",
+          )}
+        >
+          <span className="block h-full w-full bg-gradient-to-r from-transparent via-gold to-transparent" />
+          <span className="absolute inset-y-0 left-0 w-1/3 animate-marquee-slow bg-gradient-to-r from-transparent via-gold-light to-transparent" />
         </div>
       </div>
 
@@ -137,9 +141,49 @@ export default function Header() {
   );
 }
 
+function IconButton({
+  children,
+  label,
+  onClick,
+}: {
+  children: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-label={label}
+      onClick={onClick}
+      className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink transition-all duration-300 hover:text-gold hover:shadow-gold"
+    >
+      {children}
+    </button>
+  );
+}
+
+function IconLink({
+  children,
+  label,
+  href,
+}: {
+  children: React.ReactNode;
+  label: string;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink transition-all duration-300 hover:text-gold hover:shadow-gold"
+    >
+      {children}
+    </Link>
+  );
+}
+
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold-gradient px-1 text-[10px] font-bold text-obsidian">
+    <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold-gradient px-1 text-[10px] font-bold text-obsidian">
       {children}
     </span>
   );

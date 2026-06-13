@@ -27,7 +27,7 @@ export default function CartDrawer() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="fixed inset-y-0 right-0 z-[90] flex w-[420px] max-w-[90vw] flex-col border-l border-line bg-charcoal"
+            className="fixed inset-y-0 right-0 z-[90] flex w-[420px] max-w-[90vw] flex-col border-l border-gold/25 bg-charcoal/95 backdrop-blur-2xl"
           >
             <div className="flex items-center justify-between border-b border-line p-5">
               <h2 className="font-display text-xl text-ink">

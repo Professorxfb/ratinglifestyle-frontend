@@ -5,6 +5,8 @@ import PromoBanner from "@/components/home/PromoBanner";
 import UspSection from "@/components/home/UspSection";
 import SocialFeed from "@/components/home/SocialFeed";
 import Newsletter from "@/components/home/Newsletter";
+import BrandMarquee from "@/components/home/BrandMarquee";
+import GoldDivider from "@/components/ui/GoldDivider";
 import {
   getHeroBanners,
   getNewArrivals,
@@ -25,30 +27,47 @@ export default async function HomePage() {
   return (
     <>
       <Hero banners={heroBanners} />
+
+      <BrandMarquee />
+
       <FeaturedCategories />
-      <ProductRow
-        eyebrow="Just Landed"
-        title="New Arrivals"
-        viewAllHref="/new-arrivals"
-        products={newArrivals}
-      />
+
+      {/* alternating deeper background for depth */}
+      <div className="bg-charcoal">
+        <ProductRow
+          eyebrow="Just Landed"
+          title="New Arrivals"
+          viewAllHref="/new-arrivals"
+          products={newArrivals}
+        />
+      </div>
+
       <PromoBanner banner={promo} />
+
+      <GoldDivider />
+
       <ProductRow
         eyebrow="Most Loved"
         title="Best Sellers"
         viewAllHref="/shop?sort=best_selling"
         products={bestSellers}
       />
+
       {hotDeals.length > 0 && (
-        <ProductRow
-          eyebrow="Don't Miss Out"
-          title="Hot Deals"
-          viewAllHref="/deals"
-          products={hotDeals}
-        />
+        <div className="bg-charcoal">
+          <ProductRow
+            eyebrow="Don't Miss Out"
+            title="Hot Deals"
+            viewAllHref="/deals"
+            products={hotDeals}
+          />
+        </div>
       )}
+
       <UspSection />
+
       <SocialFeed />
+
       <Newsletter />
     </>
   );

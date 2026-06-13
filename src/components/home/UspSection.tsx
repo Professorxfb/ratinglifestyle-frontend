@@ -1,4 +1,15 @@
+"use client";
+
+import { motion } from "framer-motion";
 import Reveal from "@/components/ui/Reveal";
+import Counter from "@/components/ui/Counter";
+
+const stats = [
+  { value: 10000, suffix: "+", label: "Happy Customers", decimals: 0 },
+  { value: 500, suffix: "+", label: "Premium Styles", decimals: 0 },
+  { value: 64, suffix: "", label: "Districts Delivered", decimals: 0 },
+  { value: 4.9, suffix: "", label: "Avg. Rating", decimals: 1 },
+];
 
 const usps = [
   {
@@ -22,29 +33,47 @@ const usps = [
 
 export default function UspSection() {
   return (
-    <section className="border-y border-line bg-charcoal">
-      <div className="container-luxe grid grid-cols-1 gap-6 py-14 sm:grid-cols-3">
-        {usps.map((usp, i) => (
-          <Reveal key={usp.title} delay={i * 0.1}>
-            <div className="flex flex-col items-center gap-4 rounded-sm border border-line bg-card p-8 text-center transition-colors hover:border-gold/50">
-              <span className="flex h-14 w-14 items-center justify-center rounded-full border border-gold/40 text-gold">
-                <svg
-                  className="h-7 w-7"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {usp.icon}
-                </svg>
-              </span>
-              <h3 className="font-display text-xl text-ink">{usp.title}</h3>
-              <p className="text-sm leading-relaxed text-muted">{usp.text}</p>
-            </div>
-          </Reveal>
-        ))}
+    <section className="grain relative overflow-hidden border-y border-line bg-charcoal">
+      <div className="container-luxe py-20">
+        {/* Animated stats */}
+        <div className="grid grid-cols-2 gap-6 border-b border-line pb-14 lg:grid-cols-4">
+          {stats.map((s, i) => (
+            <Reveal key={s.label} delay={i * 0.08} className="text-center">
+              <p className="font-display text-5xl font-light text-gold-grad sm:text-6xl">
+                <Counter value={s.value} suffix={s.suffix} decimals={s.decimals} />
+              </p>
+              <p className="mt-2 text-xs uppercase tracking-cinematic text-muted">{s.label}</p>
+            </Reveal>
+          ))}
+        </div>
+
+        {/* USP cards */}
+        <div className="grid grid-cols-1 gap-6 pt-14 sm:grid-cols-3">
+          {usps.map((usp, i) => (
+            <Reveal key={usp.title} delay={i * 0.1}>
+              <motion.div
+                whileHover={{ y: -6 }}
+                className="glass-card flex h-full flex-col items-center gap-4 rounded-lg p-8 text-center transition-colors hover:border-gold/50 hover:shadow-gold"
+              >
+                <span className="flex h-16 w-16 items-center justify-center rounded-full border border-gold/40 text-gold transition-transform duration-500 hover:rotate-6">
+                  <svg
+                    className="h-7 w-7"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {usp.icon}
+                  </svg>
+                </span>
+                <h3 className="font-display text-2xl text-ink">{usp.title}</h3>
+                <p className="text-sm leading-relaxed text-muted">{usp.text}</p>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
       </div>
     </section>
   );

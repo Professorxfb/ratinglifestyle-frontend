@@ -15,11 +15,17 @@ export default function ProductRow({
   products: Product[];
 }) {
   return (
-    <section className="container-luxe py-16">
+    <section className="container-luxe py-20">
       <SectionHeading eyebrow={eyebrow} title={title} viewAllHref={viewAllHref} />
-      <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+
+      {/* Mobile: horizontal momentum snap-scroll. Desktop: grid. */}
+      <div className="snap-row -mx-5 flex gap-5 overflow-x-auto px-5 pb-2 no-scrollbar sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-x-6 sm:gap-y-12 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
         {products.map((p, i) => (
-          <Reveal key={p.id} delay={(i % 4) * 0.06}>
+          <Reveal
+            key={p.id}
+            delay={(i % 4) * 0.06}
+            className="w-[68vw] shrink-0 sm:w-auto"
+          >
             <ProductCard product={p} />
           </Reveal>
         ))}
